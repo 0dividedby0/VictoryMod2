@@ -1,9 +1,11 @@
 package com.dividedby0.victorymod;
 
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.client.ConfigScreenHandler;
 import com.dividedby0.victorymod.config.ConfigManager;
+import com.dividedby0.victorymod.item.ModItems;
 
 @Mod(VictoryMod.MODID)
 public class VictoryMod {
@@ -20,8 +22,11 @@ public class VictoryMod {
                 (minecraft, screen) -> new SimpleConfigScreen(screen, ConfigManager.getInstance())
             )
         );
+
+        ModItems.ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
         
         WorldInit.init();
         MonumentTracker.init();
+        HealthScalingHandler.init();
     }
 }
