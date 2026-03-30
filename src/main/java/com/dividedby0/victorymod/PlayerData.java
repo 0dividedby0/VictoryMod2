@@ -2,11 +2,9 @@ package com.dividedby0.victorymod;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public class PlayerData {
 
-    private static final Set<UUID> completedPlayers = new HashSet<>();
     private static final Set<String> collectedWools = new HashSet<>();
 
     public static void addWool(String color) {
