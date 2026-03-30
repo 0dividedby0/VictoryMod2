@@ -71,15 +71,16 @@ public class HealthScalingHandler {
     }
 
     private static int getHeartsFromLevel(int level) {
-        if (level >= 200) return 15;
-        if (level >= 150) return 12;
-        if (level >= 100) return 10;
-        if (level >= 75) return 8;
-        if (level >= 50) return 6;
-        if (level >= 40) return 5;
-        if (level >= 30) return 4;
-        if (level >= 20) return 3;
-        if (level >= 10) return 2;
+        var config = com.dividedby0.victorymod.config.ConfigManager.getInstance();
+        if (level >= config.getInt("xpThreshold_9", 200)) return 15;
+        if (level >= config.getInt("xpThreshold_8", 150)) return 12;
+        if (level >= config.getInt("xpThreshold_7", 100)) return 10;
+        if (level >= config.getInt("xpThreshold_6", 75)) return 8;
+        if (level >= config.getInt("xpThreshold_5", 50)) return 6;
+        if (level >= config.getInt("xpThreshold_4", 40)) return 5;
+        if (level >= config.getInt("xpThreshold_3", 30)) return 4;
+        if (level >= config.getInt("xpThreshold_2", 20)) return 3;
+        if (level >= config.getInt("xpThreshold_1", 10)) return 2;
         return 1;
     }
 

@@ -33,7 +33,7 @@ public class StructureSpawner {
         int spawnY = getGroundY(level, spawnX, spawnZ);
 
         BlockPos victoryPos = new BlockPos(spawnX, spawnY, spawnZ);
-        
+
         // Try to find a valid location for the victory monument
         BlockPos validMonumentPos = victoryPos;
         if (!isValidSpawnLocation(level, victoryPos)) {
@@ -41,13 +41,20 @@ public class StructureSpawner {
             validMonumentPos = findNearbyValidLocation(level, spawnX, spawnZ, 100);
             if (validMonumentPos == null) {
                 System.err.println("[VictoryMod] Could not find valid spawn location for victory monument!");
-                // Force place at spawn anyway as fallback
-                validMonumentPos = victoryPos;
+                // Force place at spawn anyway as fallback, but always use surface Y
+                int surfaceY = getGroundY(level, spawnX, spawnZ);
+                validMonumentPos = new BlockPos(spawnX, surfaceY, spawnZ);
             }
         }
-        
+
         placeStructure(level, "victory_monument", validMonumentPos);
         placedStructures.add(validMonumentPos);
+
+        // Print coordinates in chat to all players
+        String msg = String.format("§6Victory Monument spawned at X: %d, Y: %d, Z: %d", validMonumentPos.getX(), validMonumentPos.getY(), validMonumentPos.getZ());
+        level.getServer().getPlayerList().broadcastSystemMessage(
+            net.minecraft.network.chat.Component.literal(msg), false
+        );
 
         Random rand = new Random();
         // Read configuration from JSON5 config

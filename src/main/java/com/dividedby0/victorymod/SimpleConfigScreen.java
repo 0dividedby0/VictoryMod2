@@ -17,6 +17,7 @@ public class SimpleConfigScreen extends Screen {
     private EditBox minRadiusInput;
     private EditBox maxRadiusInput;
     private EditBox bufferDistanceInput;
+    private EditBox xpCsvInput;
     
     public SimpleConfigScreen(Screen previousScreen, JSON5ConfigManager configManager) {
         super(Component.literal("Victory Mod Configuration"));
@@ -27,41 +28,59 @@ public class SimpleConfigScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int startY = 60;
-        
-        // Min radius input
-        this.minRadiusInput = new EditBox(this.font, centerX - 100, startY, 200, 20, Component.literal("Min Radius"));
+        int labelX = centerX - 190;
+        int inputX = centerX + 10;
+        int y = 60;
+
+        // Main config fields side by side
+        this.minRadiusInput = new EditBox(this.font, inputX, y, 120, 20, Component.literal("Min Radius"));
         this.minRadiusInput.setValue(String.valueOf(configManager.getInt("minDungeonRadius", 40)));
         this.addRenderableWidget(this.minRadiusInput);
-        
-        // Max radius input
-        this.maxRadiusInput = new EditBox(this.font, centerX - 100, startY + 40, 200, 20, Component.literal("Max Radius"));
+        y += 32;
+
+        this.maxRadiusInput = new EditBox(this.font, inputX, y, 120, 20, Component.literal("Max Radius"));
         this.maxRadiusInput.setValue(String.valueOf(configManager.getInt("maxDungeonRadius", 750)));
         this.addRenderableWidget(this.maxRadiusInput);
-        
-        // Buffer distance input
-        this.bufferDistanceInput = new EditBox(this.font, centerX - 100, startY + 80, 200, 20, Component.literal("Buffer Distance"));
+        y += 32;
+
+        this.bufferDistanceInput = new EditBox(this.font, inputX, y, 120, 20, Component.literal("Buffer Distance"));
         this.bufferDistanceInput.setValue(String.valueOf(configManager.getInt("structureBufferDistance", 30)));
         this.addRenderableWidget(this.bufferDistanceInput);
-        
-        // Save button (left)
+        y += 40;
+
+        // XP heart requirements as a single CSV field
+        int xpInputY = y + 28;
+        StringBuilder csv = new StringBuilder();
+        for (int i = 1; i <= 9; i++) {
+            if (i > 1) csv.append(",");
+            csv.append(configManager.getInt("xpThreshold_" + i, 10 * i));
+        }
+        this.xpCsvInput = new EditBox(this.font, inputX, xpInputY, 300, 20, Component.literal("XP Heart Thresholds (CSV)"));
+        this.xpCsvInput.setValue(csv.toString());
+        this.addRenderableWidget(this.xpCsvInput);
+
+        // Save and Back buttons always at bottom
+        int buttonY = this.height - 40;
         this.addRenderableWidget(Button.builder(Component.literal("Save"), (btn) -> this.save())
-            .bounds(centerX - 110, this.height - 30, 100, 20).build());
-        
-        // Back button (right)
+            .bounds(centerX - 110, buttonY, 100, 20).build());
         this.addRenderableWidget(Button.builder(Component.literal("Back"), (btn) -> this.onClose())
-            .bounds(centerX + 10, this.height - 30, 100, 20).build());
+            .bounds(centerX + 10, buttonY, 100, 20).build());
     }
     
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
-        
-        guiGraphics.drawString(this.font, "Min Dungeon Radius (10-500):", this.width / 2 - 190, 50, 0xAAAAAA);
-        guiGraphics.drawString(this.font, "Max Dungeon Radius (50-1000):", this.width / 2 - 190, 90, 0xAAAAAA);
-        guiGraphics.drawString(this.font, "Structure Buffer (5-200):", this.width / 2 - 190, 130, 0xAAAAAA);
-        
+        int labelX = this.width / 2 - 190;
+        int inputX = this.width / 2 + 10;
+        int y = 60;
+        guiGraphics.drawString(this.font, "Min Dungeon Radius (10-500):", labelX, y, 0xAAAAAA);
+        y += 32;
+        guiGraphics.drawString(this.font, "Max Dungeon Radius (50-1000):", labelX, y, 0xAAAAAA);
+        y += 32;
+        guiGraphics.drawString(this.font, "Structure Buffer (5-200):", labelX, y, 0xAAAAAA);
+        y += 40;
+        guiGraphics.drawString(this.font, "XP Heart Requirements (CSV, 9 values):", labelX, y, 0xFFCC66);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
     
@@ -70,18 +89,24 @@ public class SimpleConfigScreen extends Screen {
             int minRadius = Integer.parseInt(this.minRadiusInput.getValue());
             int maxRadius = Integer.parseInt(this.maxRadiusInput.getValue());
             int bufferDist = Integer.parseInt(this.bufferDistanceInput.getValue());
-            
-            // Validate ranges
             minRadius = Math.max(10, Math.min(500, minRadius));
             maxRadius = Math.max(50, Math.min(1000, maxRadius));
             bufferDist = Math.max(5, Math.min(200, bufferDist));
-            
-            // Save to config
             configManager.setInt("minDungeonRadius", minRadius);
             configManager.setInt("maxDungeonRadius", maxRadius);
             configManager.setInt("structureBufferDistance", bufferDist);
+            // Parse CSV for XP thresholds
+            String[] xpVals = this.xpCsvInput.getValue().split(",");
+            for (int i = 1; i <= 9; i++) {
+                int value = 10 * i;
+                if (xpVals.length >= i) {
+                    try {
+                        value = Integer.parseInt(xpVals[i-1].trim());
+                    } catch (NumberFormatException ignore) {}
+                }
+                configManager.setInt("xpThreshold_" + i, value);
+            }
             configManager.saveConfig();
-            
             this.onClose();
         } catch (NumberFormatException e) {
             // Show error - values will be reset on close
