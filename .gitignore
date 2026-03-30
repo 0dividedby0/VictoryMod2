@@ -1,0 +1,57 @@
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+
+# Gradle
+.gradle/
+build/
+out/
+
+# Minecraft Forge
+run/
+logs/
+crash-reports/
+saves/
+options.txt
+usercache.json
+usernamecache.json
+config/
+defaultconfigs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+
+# Java
+*.class
+*.jar
+!gradle-wrapper.jar
+
+# Gradle Wrapper (uncomment if you want to ignore)
+/# gradle/wrapper/gradle-wrapper.jar
+/# gradle/wrapper/gradle-wrapper.properties
+
+# Forge MDK
+# Uncomment the next line if you want to ignore the entire MDK
+# *
+
+# Eclipse run configurations
+*.launch
