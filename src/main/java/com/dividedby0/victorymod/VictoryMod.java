@@ -1,7 +1,6 @@
 package com.dividedby0.victorymod;
 
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.client.ConfigScreenHandler;
 import com.dividedby0.victorymod.config.ConfigManager;
@@ -10,6 +9,7 @@ import com.dividedby0.victorymod.config.ConfigManager;
 public class VictoryMod {
     public static final String MODID = "victorymod";
 
+    @SuppressWarnings("removal")
     public VictoryMod() {
         // Initialize JSON5 config manager
         ConfigManager.getInstance();
