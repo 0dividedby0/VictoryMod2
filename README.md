@@ -2,12 +2,20 @@
 
 A Minecraft Forge mod for Minecraft 1.20.1 that spawns a victory monument at world spawn with 16 colored dungeons containing wool samples. Collect all wool colors to achieve victory!
 
+Current release channel: **Beta** (`1.0.0-beta.1`).
+
 ## Features
 
 - Spawns a central victory monument at world spawn
 - Generates 16 random dungeons (one per wool color) within a radius of spawn
 - Dungeons are designed to be challenging with infernal-style mobs
 - Collect all 16 wool colors by placing them on the monument to win
+
+## Compatibility
+
+- Minecraft: `1.20.1`
+- Forge: `47.4.10+`
+- Java: `17`
 
 ## Prerequisites
 
@@ -86,7 +94,7 @@ This project is based on the Forge MDK for 1.20.1-47.4.10. If starting from scra
 ./gradlew build
 ```
 
-This will compile the mod and generate the JAR file at `build/libs/victorymod-1.0.0.jar`. Copy this JAR to your Prism Launcher instance's mods folder to install the mod.
+This will compile the mod and generate the JAR file at `build/libs/victorymod-1.0.0-beta.1.jar`. Copy this JAR to your Prism Launcher instance's mods folder to install the mod.
 
 ## Running the Mod
 
@@ -142,6 +150,20 @@ If using VS Code, use the configured tasks:
 - If structures don't spawn, check console logs for error messages
 - Ensure you're using the correct Forge version (47.4.10 for 1.20.1)
 
+## Project Links
+
+- Repository: https://github.com/0dividedby0/VictoryMonument
+- Issues: https://github.com/0dividedby0/VictoryMonument/issues
+
+## Release Notes (1.0.0-beta.1)
+
+- Initial beta release on Forge 1.20.1.
+- Added monument and dungeon world-generation pipeline.
+- Added all 16 color objective dungeons.
+- Added configurable generation radius and spacing.
+- Added wool placement tracking and completion trigger.
+- Added persistent generation state and in-game config UI.
+
 ## Contributing
 
 1. Fork the repository
@@ -152,4 +174,11 @@ If using VS Code, use the configured tasks:
 
 ## License
 
-All Rights Reserved (as per mod metadata)
+MIT License — see [LICENSE](LICENSE) for full text.
+
+## Credits
+
+Inspired by Vech's **Super Hostile** map series.
+Super Hostile series: https://superhostile.fandom.com/wiki/Super_Hostile_(Series)
+
+This mod is an independent, original work and is not affiliated with or endorsed by Vech.

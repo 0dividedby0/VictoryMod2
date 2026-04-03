@@ -18,7 +18,7 @@ public class SimpleConfigScreen extends Screen {
     private int bufferDistance;
     
     public SimpleConfigScreen(Screen previousScreen, JSON5ConfigManager configManager) {
-        super(Component.literal("Victory Mod Configuration"));
+        super(Component.literal("Victory Monument Configuration"));
         this.previousScreen = previousScreen;
         this.configManager = configManager;
     }

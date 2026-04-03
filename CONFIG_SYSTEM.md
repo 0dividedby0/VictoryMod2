@@ -1,8 +1,8 @@
-# Victory Mod - In-Game Configuration System
+# Victory Monument - In-Game Configuration System
 
 ## Overview
 
-Victory Mod now features a complete in-game configuration UI that allows players to modify mod settings without restarting the game. Configuration is stored in JSON5 format for easy editing.
+Victory Monument now features a complete in-game configuration UI that allows players to modify mod settings without restarting the game. Configuration is stored in JSON5 format for easy editing.
 
 ## Features
 

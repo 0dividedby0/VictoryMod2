@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Manages JSON5 configuration files for Victory Mod.
+ * Manages JSON5 configuration files for Victory Monument.
  * Uses a simple map-based approach for configuration storage.
  */
 public class JSON5ConfigManager {
