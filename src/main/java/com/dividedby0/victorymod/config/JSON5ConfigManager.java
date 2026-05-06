@@ -371,23 +371,45 @@ public class JSON5ConfigManager {
 
     private static JsonObject createDefaultStructures() {
         JsonObject structures = new JsonObject();
-        structures.add("victory_monument", new JsonObject());
-        structures.add("dungeon_white", new JsonObject());
-        structures.add("dungeon_orange", new JsonObject());
-        structures.add("dungeon_magenta", new JsonObject());
-        structures.add("dungeon_lightblue", new JsonObject());
-        structures.add("dungeon_yellow", new JsonObject());
-        structures.add("dungeon_lime", new JsonObject());
-        structures.add("dungeon_pink", new JsonObject());
-        structures.add("dungeon_gray", new JsonObject());
-        structures.add("dungeon_lightgray", new JsonObject());
-        structures.add("dungeon_cyan", new JsonObject());
-        structures.add("dungeon_purple", new JsonObject());
-        structures.add("dungeon_blue", new JsonObject());
-        structures.add("dungeon_brown", new JsonObject());
-        structures.add("dungeon_green", new JsonObject());
-        structures.add("dungeon_red", new JsonObject());
-        structures.add("dungeon_black", new JsonObject());
+        structures.add("victory_monument", surfaceRules(0));
+        structures.add("dungeon_white", surfaceRules(-1, "minecraft:snowy_slopes", "minecraft:jagged_peaks", "minecraft:ice_spikes"));
+        structures.add("dungeon_orange", surfaceRules(-2, "minecraft:desert", "minecraft:badlands", "minecraft:eroded_badlands"));
+        structures.add("dungeon_magenta", undergroundRules(20, 48, "minecraft:flower_forest", "minecraft:cherry_grove", "minecraft:dark_forest"));
+        structures.add("dungeon_lightblue", surfaceRules(1, "minecraft:meadow", "minecraft:windswept_hills", "minecraft:windswept_forest"));
+        structures.add("dungeon_yellow", surfaceRules(-1, "minecraft:desert", "minecraft:savanna", "minecraft:sunflower_plains"));
+        structures.add("dungeon_lime", undergroundRules(28, 52, "minecraft:forest", "minecraft:birch_forest", "minecraft:jungle"));
+        structures.add("dungeon_pink", surfaceRules(0, "minecraft:cherry_grove", "minecraft:flower_forest", "minecraft:meadow"));
+        structures.add("dungeon_gray", surfaceRules(2, "minecraft:frozen_peaks", "minecraft:jagged_peaks", "minecraft:grove"));
+        structures.add("dungeon_lightgray", undergroundRules(26, 50, "minecraft:stony_peaks", "minecraft:old_growth_pine_taiga", "minecraft:windswept_gravelly_hills"));
+        structures.add("dungeon_cyan", undergroundRules(18, 44, "minecraft:dripstone_caves", "minecraft:lush_caves", "minecraft:deep_frozen_ocean"));
+        structures.add("dungeon_purple", undergroundRules(8, 28, "minecraft:deep_dark", "minecraft:dripstone_caves", "minecraft:stony_peaks"));
+        structures.add("dungeon_blue", surfaceRules(1, "minecraft:beach", "minecraft:stony_shore", "minecraft:snowy_beach"));
+        structures.add("dungeon_brown", surfaceRules(-1, "minecraft:swamp", "minecraft:mangrove_swamp", "minecraft:jungle"));
+        structures.add("dungeon_green", surfaceRules(-1, "minecraft:jungle", "minecraft:bamboo_jungle", "minecraft:sparse_jungle"));
+        structures.add("dungeon_red", undergroundRules(12, 36, "minecraft:badlands", "minecraft:eroded_badlands", "minecraft:dripstone_caves"));
+        structures.add("dungeon_black", undergroundRules(6, 24, "minecraft:deep_dark", "minecraft:jagged_peaks", "minecraft:stony_peaks"));
         return structures;
+    }
+
+    private static JsonObject surfaceRules(int surfaceOffset, String... biomes) {
+        JsonObject root = createDefaultRules();
+        JsonObject biomeRules = root.getAsJsonObject("biomes");
+        biomeRules.addProperty("mode", biomes.length == 0 ? "any" : "allow");
+        JsonArray biomeValues = new JsonArray();
+        for (String biome : biomes) {
+            biomeValues.add(biome);
+        }
+        biomeRules.add("values", biomeValues);
+        root.getAsJsonObject("height").addProperty("surfaceOffset", surfaceOffset);
+        return root;
+    }
+
+    private static JsonObject undergroundRules(int minY, int maxY, String... biomes) {
+        JsonObject root = surfaceRules(0, biomes);
+        JsonObject height = root.getAsJsonObject("height");
+        height.addProperty("mode", "underground");
+        height.addProperty("minY", minY);
+        height.addProperty("maxY", maxY);
+        return root;
     }
 }

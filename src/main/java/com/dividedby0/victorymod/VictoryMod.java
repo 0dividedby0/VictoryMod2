@@ -24,5 +24,6 @@ public class VictoryMod {
 
         WorldInit.init();
         MonumentTracker.init();
+        DebugCommands.init();
     }
 }

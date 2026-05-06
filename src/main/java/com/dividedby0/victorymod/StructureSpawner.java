@@ -30,6 +30,15 @@ public class StructureSpawner {
 
     private static final List<BlockPos> placedStructures = new ArrayList<>();
 
+    public static List<String> getStructureNames() {
+        List<String> names = new ArrayList<>();
+        names.add("victory_monument");
+        for (String color : COLORS) {
+            names.add("dungeon_" + color);
+        }
+        return names;
+    }
+
     public static void spawnAll(ServerLevel level) {
         placedStructures.clear();
 
@@ -93,8 +102,9 @@ public class StructureSpawner {
 
     /**
      * Spawn a dungeon with progressive fallback strategies to ensure placement.
-     * Tries in order: valid location + proximity check, valid location only, 
-     * any location + proximity check, any location.
+     * Tries in order while always respecting the configured spawn radius:
+     * full rules + buffer, full rules, relaxed terrain checks, relaxed biome checks,
+     * relaxed height rules, and finally a forced surface placement within radius.
      */
     private static BlockPos spawnDungeonWithFallbacks(
         ServerLevel level,
@@ -108,7 +118,7 @@ public class StructureSpawner {
         StructureRules rules
     ) {
         // Strategy 1: Valid location + respect buffer distance
-        BlockPos pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, bufferDistance, true, true, rules);
+        BlockPos pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, bufferDistance, true, true, true, rules);
         if (pos != null) {
             placeStructure(level, structureName, pos);
             return pos;
@@ -116,7 +126,7 @@ public class StructureSpawner {
 
         // Strategy 2: Valid location only (ignore buffer)
         System.out.println("[VictoryMod] " + structureName + " relaxing buffer constraint");
-        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, 0, true, true, rules);
+        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, 0, true, true, true, rules);
         if (pos != null) {
             placeStructure(level, structureName, pos);
             return pos;
@@ -124,28 +134,39 @@ public class StructureSpawner {
 
         // Strategy 3: Any location + respect buffer (ignore valid location check)
         System.out.println("[VictoryMod] " + structureName + " relaxing terrain validation");
-        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, bufferDistance, false, true, rules);
+        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, bufferDistance, false, true, true, rules);
         if (pos != null) {
             placeStructure(level, structureName, pos);
             return pos;
         }
 
-        // Strategy 4: Any location, any radius (ignore valid location and buffer)
-        System.out.println("[VictoryMod] " + structureName + " relaxing radius and proximity constraints");
-        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, 0, false, false, rules);
+        // Strategy 4: Any location within radius (ignore valid location and buffer)
+        System.out.println("[VictoryMod] " + structureName + " relaxing proximity constraints");
+        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, 0, false, true, true, rules);
         if (pos != null) {
             placeStructure(level, structureName, pos);
             return pos;
         }
 
-        // Strategy 5: Force placement at a random location near spawn
-        System.out.println("[VictoryMod] " + structureName + " forcing placement near spawn");
-        int forceX = spawnX + rand.nextInt(400) - 200;
-        int forceZ = spawnZ + rand.nextInt(400) - 200;
-        BlockPos forcePos = createCandidatePos(level, rand, forceX, forceZ, rules);
-        if (forcePos == null) {
-            forcePos = new BlockPos(forceX, getGroundY(level, forceX, forceZ), forceZ);
+        // Strategy 5: Ignore biome requirements if needed, still within radius
+        System.out.println("[VictoryMod] " + structureName + " relaxing biome constraints");
+        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, 0, false, false, true, rules);
+        if (pos != null) {
+            placeStructure(level, structureName, pos);
+            return pos;
         }
+
+        // Strategy 6: Ignore configured height rules and place on the surface within radius
+        System.out.println("[VictoryMod] " + structureName + " relaxing height constraints");
+        pos = findDungeonLocation(level, rand, spawnX, spawnZ, minRadius, maxRadius, 0, false, false, false, rules);
+        if (pos != null) {
+            placeStructure(level, structureName, pos);
+            return pos;
+        }
+
+        // Strategy 7: Force placement within the configured radius ring and fall back to surface height
+        System.out.println("[VictoryMod] " + structureName + " forcing placement within configured radius");
+        BlockPos forcePos = createForcedRadiusPos(level, rand, spawnX, spawnZ, minRadius, maxRadius, rules);
         placeStructure(level, structureName, forcePos);
         return forcePos;
     }
@@ -162,32 +183,26 @@ public class StructureSpawner {
         int maxRadius,
         int bufferDistance,
         boolean requireValidLocation,
-        boolean enforceRadius,
+        boolean requireBiomeMatch,
+        boolean useConfiguredHeight,
         StructureRules rules
     ) {
         int attempts = 0;
         int maxAttempts = 100;
 
         while (attempts < maxAttempts) {
-            int x, z;
+            BlockPos horizontalPos = sampleWithinRadius(rand, spawnX, spawnZ, minRadius, maxRadius);
+            int x = horizontalPos.getX();
+            int z = horizontalPos.getZ();
 
-            if (enforceRadius) {
-                double angle = rand.nextDouble() * Math.PI * 2.0;
-                int radius = minRadius + rand.nextInt(maxRadius - minRadius + 1);
-                x = spawnX + (int) Math.round(radius * Math.cos(angle));
-                z = spawnZ + (int) Math.round(radius * Math.sin(angle));
-            } else {
-                // Any location within a larger search area
-                x = spawnX + rand.nextInt(maxRadius * 2) - maxRadius;
-                z = spawnZ + rand.nextInt(maxRadius * 2) - maxRadius;
-            }
-
-            if (!biomeMatches(level, x, z, rules.biomeRules)) {
+            if (requireBiomeMatch && !biomeMatches(level, x, z, rules.biomeRules)) {
                 attempts++;
                 continue;
             }
 
-            BlockPos candidatePos = createCandidatePos(level, rand, x, z, rules);
+            BlockPos candidatePos = useConfiguredHeight
+                ? createCandidatePos(level, rand, x, z, rules)
+                : createSurfaceFallbackPos(level, x, z);
             if (candidatePos == null) {
                 attempts++;
                 continue;
@@ -204,6 +219,31 @@ public class StructureSpawner {
         }
 
         return null;
+    }
+
+    private static BlockPos sampleWithinRadius(Random rand, int spawnX, int spawnZ, int minRadius, int maxRadius) {
+        double angle = rand.nextDouble() * Math.PI * 2.0;
+        int radius = minRadius + rand.nextInt(Math.max(1, maxRadius - minRadius + 1));
+        int x = spawnX + (int) Math.round(radius * Math.cos(angle));
+        int z = spawnZ + (int) Math.round(radius * Math.sin(angle));
+        return new BlockPos(x, 0, z);
+    }
+
+    private static BlockPos createSurfaceFallbackPos(ServerLevel level, int x, int z) {
+        return new BlockPos(x, getGroundY(level, x, z), z);
+    }
+
+    private static BlockPos createForcedRadiusPos(
+        ServerLevel level,
+        Random rand,
+        int spawnX,
+        int spawnZ,
+        int minRadius,
+        int maxRadius,
+        StructureRules rules
+    ) {
+        BlockPos horizontalPos = sampleWithinRadius(rand, spawnX, spawnZ, minRadius, maxRadius);
+        return createSurfaceFallbackPos(level, horizontalPos.getX(), horizontalPos.getZ());
     }
 
     private static int getGroundY(ServerLevel level, int x, int z) {
@@ -324,18 +364,22 @@ public class StructureSpawner {
         return false;
     }
 
-    private static void placeStructure(ServerLevel level, String name, BlockPos pos) {
+    public static boolean placeStructureByName(ServerLevel level, String name, BlockPos pos) {
+        return placeStructure(level, name, pos);
+    }
+
+    private static boolean placeStructure(ServerLevel level, String name, BlockPos pos) {
         ResourceLocation templateId = ResourceLocation.tryParse("victorymod:" + name);
         if (templateId == null) {
             System.err.println("[VictoryMod] invalid structure id: " + name);
-            return;
+            return false;
         }
 
         StructureTemplate template = level.getStructureManager().getOrCreate(templateId);
 
         if (template == null) {
             System.err.println("[VictoryMod] structure not found: " + name + " (id=" + templateId + ")");
-            return;
+            return false;
         }
 
         boolean placed = template.placeInWorld(level, pos, pos, new StructurePlaceSettings(), level.random, 3);
@@ -344,6 +388,7 @@ public class StructureSpawner {
         } else {
             System.out.println("[VictoryMod] placed " + name + " at " + pos);
         }
+        return placed;
     }
 
     private static StructureRules getRulesForStructure(String structureName, JsonObject defaultRules, JsonObject structureOverrides) {
