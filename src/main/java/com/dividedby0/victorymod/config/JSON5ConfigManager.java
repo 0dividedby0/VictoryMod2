@@ -77,12 +77,12 @@ public class JSON5ConfigManager {
 
         configMetadata.put("defaultRules", new ConfigEntry(
             "defaultRules", createDefaultRules(), "object",
-            "Default biome, height, and placement rules used by structures unless overridden"
+            "Default biome and height rules used by structures unless overridden"
         ));
 
         configMetadata.put("structures", new ConfigEntry(
             "structures", createDefaultStructures(), "object",
-            "Per-structure placement rule overrides for the monument and each dungeon"
+            "Per-structure biome and height rule overrides for the monument and each dungeon"
         ));
     }
 
@@ -359,12 +359,6 @@ public class JSON5ConfigManager {
         height.addProperty("y", 64);
         height.addProperty("surfaceOffset", 0);
         root.add("height", height);
-
-        JsonObject placement = new JsonObject();
-        placement.addProperty("requireSolidGround", true);
-        placement.addProperty("allowWater", false);
-        placement.addProperty("allowTrees", false);
-        root.add("placement", placement);
 
         return root;
     }

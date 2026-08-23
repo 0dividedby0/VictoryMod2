@@ -2,12 +2,15 @@
 
 A Minecraft Forge mod for Minecraft 1.20.1 that spawns a victory monument at world spawn with 16 colored dungeons containing wool samples. Collect all wool colors to achieve victory!
 
-Current release: **1.0.0**.
+Current release: **1.0.1**.
 
 ## Features
 
 - Spawns a central victory monument at world spawn
-- Generates 16 random dungeons (one per wool color) within a radius of spawn
+- Generates 16 distributed dungeons (one per wool color) within a radius of spawn
+- Places at most one structure per server tick to avoid blocking initial world generation
+- Uses bounded golden-angle candidate searches instead of unbounded random trial and error
+- Guarantees a final in-radius position for every dungeon when configured terrain, biome, or spacing constraints cannot all be satisfied
 - Dungeons are designed to be challenging with infernal-style mobs
 - Collect all 16 wool colors by placing them on the monument to win
 
@@ -94,7 +97,7 @@ This project is based on the Forge MDK for 1.20.1-47.4.10. If starting from scra
 ./gradlew build
 ```
 
-This will compile the mod and generate the JAR file at `build/libs/victorymonument-1.0.0.jar`. Copy this JAR to your Prism Launcher instance's mods folder to install the mod.
+This will compile the mod and generate the JAR file at `build/libs/victorymonument-1.0.1.jar`. Copy this JAR to your Prism Launcher instance's mods folder to install the mod.
 
 ## Running the Mod
 
@@ -162,6 +165,18 @@ Height modes:
 - `air`: choose a Y randomly between `minY` and `maxY`
 - `fixed`: always use exact `y`
 
+### Placement and Fallback Order
+
+Each dungeon uses a fixed, bounded amount of search work. Candidate columns are distributed using a golden-angle sequence rather than repeated random guesses. The fallback order is:
+
+1. Configured minimum/maximum radius with the configured structure buffer
+2. Configured radius with the buffer relaxed
+3. Minimum radius relaxed while retaining the buffer
+4. Minimum radius and buffer both relaxed, still inside the configured maximum radius
+5. Deterministic final placement inside the maximum radius
+
+Biome and height rules are honored during normal searches. The deterministic final fallback may break biome suitability, usable-terrain, minimum-radius, and buffer constraints so that all 16 objective dungeons still receive positions. It never intentionally exceeds `maxDungeonRadius`. A world is marked generated only after the monument and all 16 dungeon templates report successful placement; otherwise placement is retried on a later load.
+
 Example:
 
 ```json5
@@ -181,11 +196,6 @@ Example:
       "maxY": 120,
       "y": 64,
       "surfaceOffset": 0
-    },
-    "placement": {
-      "requireSolidGround": true,
-      "allowWater": false,
-      "allowTrees": false
     }
   },
 
@@ -212,9 +222,6 @@ Example:
         "mode": "air",
         "minY": 120,
         "maxY": 180
-      },
-      "placement": {
-        "requireSolidGround": false
       }
     }
   }
@@ -240,16 +247,12 @@ Example:
 - Repository: https://github.com/0divMods/VictoryMonument
 - Issues: https://github.com/0divMods/VictoryMonument/issues
 
-## Release Notes (1.0.0)
+## Release Notes (1.0.1)
 
-- Stable Forge 1.20.1 release.
-- Added monument and dungeon world-generation pipeline.
-- Added all 16 color objective dungeons.
-- Added configurable generation radius, spacing, biome rules, and height rules.
-- Added wool placement tracking and completion trigger.
-- Added persistent generation state and in-game config UI.
-- Improved dungeon placement fallbacks so the configured max radius remains the hard cap while terrain and spacing constraints relax progressively.
-- Increased default dungeon spacing and minimum spawn radius to reduce structure overlap near world spawn.
+- Generates one structure per tick to keep world creation responsive.
+- Replaced high-volume random placement attempts with bounded golden-angle searches.
+- Added a deterministic in-radius fallback so every objective dungeon receives a placement position.
+- Marks generation complete only after the monument and all 16 dungeons succeed.
 
 ## Contributing
 

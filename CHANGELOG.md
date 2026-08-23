@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows semantic versioning.
 
+## [1.0.1] - 2026-08-23
+
+### Changed
+- Spread structure generation across server ticks, placing at most one monument or dungeon per tick.
+- Replaced up to hundreds of random placement attempts per fallback stage with bounded golden-angle candidate searches.
+- Simplified surface validation to scan downward past foliage while rejecting liquid columns during normal placement.
+- Removed obsolete placement-rule config fields; biome and height rules remain supported.
+
+### Fixed
+- Added a deterministic final fallback inside `maxDungeonRadius` so every color dungeon receives a placement position even when normal biome, terrain, radius, or buffer constraints conflict.
+- Prevented incomplete monument/dungeon batches from being marked generated; failed template placement is retried on a later world load.
+- Prevented world generation from stalling under restrictive buffer and placement constraints.
+
 ## [1.0.0] - 2026-06-29
 
 ### Added
@@ -15,7 +28,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 - Updated config initialization to use Forge's config directory path so the mod behaves correctly in shared dev-pack runs and other nonstandard launch environments.
 - Removed beta version tags for the stable publish build.
 - Increased the default dungeon minimum radius and structure buffer distance to reduce overlaps around spawn.
-- Improved dungeon placement fallback order so terrain and inner-radius constraints relax before structure spacing is abandoned.
+- Improved dungeon placement fallback order so structure spacing relaxes only after bounded usable-terrain searches.
 - Kept the configured maximum dungeon radius as a hard cap for normal and forced placements.
 - Reduced dungeon coordinate logging so only the victory monument location is revealed.
 
